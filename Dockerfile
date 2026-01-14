@@ -21,6 +21,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Install OpenSSL/libc6 for Prisma
+RUN apk add --no-cache libc6-compat openssl
+
+# Generate Prisma Client
+RUN npx prisma generate
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
@@ -40,13 +46,16 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# Install OpenSSL/libc6 for Prisma Runtime
+RUN apk add --no-cache libc6-compat openssl
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
-mkdir .next
+RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
